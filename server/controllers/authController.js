@@ -29,7 +29,7 @@ export const register = async (req, res) => {
             maxAge: 7 * 24 * 60 * 1000
 
         })
-        return res.json({success: true});
+        return res.json({ success: true });
 
     } catch (error) {
         res.json({ success: false, message: error.message })
@@ -62,9 +62,27 @@ export const login = async (req, res) => {
             maxAge: 7 * 24 * 60 * 1000
 
         })
-        return res.json({success: true});
+        return res.json({ success: true });
 
     } catch (error) {
         return res.json({ success: false, message: error.message })
+    }
+}
+
+
+export const logout = async (req, res) => {
+
+    try {
+        res.clearCooki('token', {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === 'production',
+            sameSite: process.env.NODE_ENV === 'production' ?
+                'none' : 'strict',
+        })
+
+        return res.json({success:true, message:'Logged out'})
+    } catch (error) {
+        return res.json({ success: false, message: error.message })
+
     }
 }
