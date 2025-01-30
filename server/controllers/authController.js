@@ -6,7 +6,7 @@ export const register = async (req, res) => {
     const { name, email, password } = req.body;
 
     if (!name || !email || !password) {
-        return res.json({ success: false, message: 'missing Details' })
+        return res.json({ success: false, message: 'Missing Details' })
     }
     try {
         const existingUser = await userModel.findOne({ email })
@@ -14,19 +14,19 @@ export const register = async (req, res) => {
             return res.json({ success: false, message: "User already exists" })
         }
         //encrypt password
-        const hashedPasswort = await bcrypt.hash(password, 10)
+        const hashedPassword = await bcrypt.hash(password, 10)
 
-        const user = new userModel({ name, email, password: hashedPasswort })
+        const user = new userModel({ name, email, password: hashedPassword })
         await user.save();
 
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expireIn: '7d' })
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ?
                 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000
 
         })
         return res.json({ success: true });
@@ -53,13 +53,13 @@ export const login = async (req, res) => {
             return res.json({ success: false, message: 'Invalid password' })
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expireIn: '7d' })
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '7d' })
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ?
                 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000
 
         })
         return res.json({ success: true });
@@ -73,14 +73,15 @@ export const login = async (req, res) => {
 export const logout = async (req, res) => {
 
     try {
-        res.clearCooki('token', {
+        res.clearCookie('token', {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ?
                 'none' : 'strict',
         })
 
-        return res.json({success:true, message:'Logged out'})
+        return res.json({ success: true, message: 'Logged out' })
+        
     } catch (error) {
         return res.json({ success: false, message: error.message })
 
