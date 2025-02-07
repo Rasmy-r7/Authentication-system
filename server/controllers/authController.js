@@ -9,6 +9,7 @@ export const register = async (req, res) => {
     if (!name || !email || !password) {
         return res.json({ success: false, message: 'Missing Details' })
     }
+
     try {
         const existingUser = await userModel.findOne({ email })
         if (existingUser) {
@@ -150,9 +151,10 @@ export const verifyEmail = async (req, res) => {
         if (user.verifyOtp === '' || user.verifyOtp !== otp) {
             return res.json({ success: false, message: 'Invalid OTP' })
         }
-        if (user.verifyOtpExpireAt < Date.now()) {
-            return res.json({ success: false, message: 'OTP Expired' })
+        if (!user.verifyOtpExpireAt || user.verifyOtpExpireAt < Date.now()) {
+            return res.json({ success: false, message: 'OTP Expired' });
         }
+        
         user.isAccountVerified = true;
         user.verifyOtp = '';
         user.verifyOtpExpireAt = 0;
@@ -203,8 +205,12 @@ export const sendResetOtp = async (req, res) => {
             subject: 'Password Reset OTP',
             text: `Your OTP for resetting your password is ${otp}. Use this OTP to proceed with resetting your password.`
         }
-        await transporter.sendMail(mailOpton);
-
+        try {
+            await transporter.sendMail(mailOpton);
+        } catch (mailError) {
+            console.error("Email sending failed:", mailError);
+        }
+        
         return res.json({ success: true, message: 'OTP sent to your Email' })
 
     } catch (error) {
@@ -231,7 +237,7 @@ export const resetPassword = async (req, res) => {
             return res.json({ success: false, message: 'User not found' });
         }
 
-        if (user.resetOt === "" || user.resetOtp !== otp) {
+        if (user.resetOtp === "" || user.resetOtp !== otp) {
             return res.json({ success: false, message: 'Invalid OTP' });
         }
 
